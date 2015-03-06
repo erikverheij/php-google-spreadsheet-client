@@ -277,7 +277,7 @@ class DefaultServiceRequest implements ServiceRequestInterface
                     throw new UnauthorizedException('You need permission', 404);
                     break;
                 default:
-                    throw new Exception('Error in Google Request', $info['http_code']);
+                    throw new Exception('Error in Google Request, response body: ' . $ret, $info['http_code']);
             }
         }
 
