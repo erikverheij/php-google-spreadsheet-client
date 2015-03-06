@@ -27,7 +27,7 @@ class DefaultServiceRequest implements ServiceRequestInterface
 {
     /**
      * Request object
-     * 
+     *
      * @var \Google\Spreadsheet\Request
      */
     protected $accessToken;
@@ -41,21 +41,21 @@ class DefaultServiceRequest implements ServiceRequestInterface
 
     /**
      * Request headers
-     * 
+     *
      * @var array
      */
     protected $headers = array();
 
     /**
      * Service url
-     * 
+     *
      * @var string
      */
     protected $serviceUrl = 'https://spreadsheets.google.com/';
 
     /**
      * User agent
-     * 
+     *
      * @var string
      */
     protected $userAgent = 'PHP Google Spreadsheet Api';
@@ -71,7 +71,7 @@ class DefaultServiceRequest implements ServiceRequestInterface
 
     /**
      * Initializes the service request object.
-     * 
+     *
      * @param \Google\Spreadsheet\Request $request
      */
     public function __construct($accessToken, $tokenType = 'OAuth')
@@ -82,17 +82,17 @@ class DefaultServiceRequest implements ServiceRequestInterface
 
     /**
      * Get request headers
-     * 
+     *
      * @return array
      */
     public function getHeaders()
     {
         return $this->headers;
     }
-    
+
     /**
-     * Set optional request headers. 
-     * 
+     * Set optional request headers.
+     *
      * @param array $headers associative array of key value pairs
      *
      * @return Google\Spreadsheet\DefaultServiceRequest
@@ -105,17 +105,17 @@ class DefaultServiceRequest implements ServiceRequestInterface
 
     /**
      * Get the user agent
-     * 
+     *
      * @return string
      */
     public function getUserAgent()
     {
         return $this->userAgent;
     }
-    
+
     /**
      * Set the user agent. It is a good ides to leave this as is.
-     * 
+     *
      * @param string $userAgent
      *
      * @return Google\Spreadsheet\DefaultServiceRequest
@@ -150,9 +150,9 @@ class DefaultServiceRequest implements ServiceRequestInterface
 
     /**
      * Perform a get request
-     * 
+     *
      * @param string $url
-     * 
+     *
      * @return string
      */
     public function get($url)
@@ -166,18 +166,13 @@ class DefaultServiceRequest implements ServiceRequestInterface
      * Perform a post request
      *
      * @param string $url
-     * @param mixed $postData
-     * @param array $extraHeaders
+     * @param mixed  $postData
+     *
      * @return string
      */
-    public function post($url, $postData, $extraHeaders = array())
+    public function post($url, $postData)
     {
-        $headers = array_merge(
-            array('Content-Type: application/atom+xml'),
-            $extraHeaders
-        );
-
-        $ch = $this->initRequest($url, $headers);
+        $ch = $this->initRequest($url, array('Content-Type: application/atom+xml'));
         curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'POST');
         curl_setopt($ch, CURLOPT_POSTFIELDS, $postData);
         return $this->execute($ch);
@@ -185,10 +180,10 @@ class DefaultServiceRequest implements ServiceRequestInterface
 
     /**
      * Perform a put request
-     * 
+     *
      * @param string $url
      * @param mixed  $postData
-     * 
+     *
      * @return string
      */
     public function put($url, $postData)
@@ -201,9 +196,9 @@ class DefaultServiceRequest implements ServiceRequestInterface
 
     /**
      * Perform a delete request
-     * 
+     *
      * @param string $url
-     * 
+     *
      * @return string
      */
     public function delete($url)
@@ -215,17 +210,17 @@ class DefaultServiceRequest implements ServiceRequestInterface
 
     /**
      * Initialize the curl session
-     * 
-     * @param string $url           
+     *
+     * @param string $url
      * @param array  $requestHeaders
-     * 
+     *
      * @return resource
      */
     protected function initRequest($url, $requestHeaders = array())
     {
         $curlParams = array (
             CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_FOLLOWLOCATION => 0,
+            CURLOPT_FOLLOWLOCATION => true,
             CURLOPT_FAILONERROR => false,
             CURLOPT_SSL_VERIFYPEER => true,
             CURLOPT_VERBOSE => false,
@@ -250,18 +245,18 @@ class DefaultServiceRequest implements ServiceRequestInterface
 
         curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
         curl_setopt($ch, CURLOPT_USERAGENT, $this->getUserAgent());
-        return $ch;       
+        return $ch;
     }
 
     /**
      * Executes the api request.
-     * 
+     *
      * @return string the xml response
      *
      * @throws \Google\Spreadsheet\Exception If the was a problem with the request.
      *                                       Will throw an exception if the response
      *                                       code is 300 or greater
-     *                                       
+     *
      * @throws \Google\Spreadsheet\UnauthorizedException
      */
     protected function execute($ch)
@@ -269,23 +264,20 @@ class DefaultServiceRequest implements ServiceRequestInterface
         $retry_count = 0;
         $response_success = false;
 
-        while ($retry_count < $this->retryRedirectsLimit && $response_success == false) {
-            $ret = curl_exec($ch);
-            $info = curl_getinfo($ch);
-            $httpCode = (int) $info['http_code'];
-
-            if ($httpCode > 299) {
-                $retry_count ++;
-            } else {
-                $response_success = true;
-            }
-        }
+        $ret = curl_exec($ch);
+        $info = curl_getinfo($ch);
+        $httpCode = (int) $info['http_code'];
 
         if ($httpCode > 299) {
-            if ($httpCode === 401) {
-                throw new UnauthorizedException('Access token is invalid', 401);
-            } else {
-                throw new Exception('Error in Google Request', $info['http_code']);
+            switch ($httpCode) {
+                case 401:
+                    throw new UnauthorizedException('Access token is invalid', 401);
+                    break;
+                case 404:
+                    throw new UnauthorizedException('You need permission', 404);
+                    break;
+                default:
+                    throw new Exception('Error in Google Request', $info['http_code']);
             }
         }
 

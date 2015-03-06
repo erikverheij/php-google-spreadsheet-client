@@ -149,7 +149,9 @@ class CellFeed
     public function insertBatch(BatchRequest $batchRequest)
     {
         $xml = $batchRequest->createRequestXml($this);
-        $response = ServiceRequestFactory::getInstance()->post($this->getBatchUrl(), $xml, array("If-Match: *"));
+        $response = ServiceRequestFactory::getInstance()
+            ->setHeaders(array("If-Match" => "*"))
+            ->post($this->getBatchUrl(), $xml);
         return new BatchResponse(new SimpleXMLElement($response));
     }
 
@@ -175,12 +177,14 @@ class CellFeed
     /**
      * Create a entry to insert data
      *
-     * @param int $row
-     * @param int $col
+     * @param int    $row
+     * @param int    $col
      * @param string $content
+     * 
      * @return CellEntry
      */
-    public function createInsertionCell($row, $col, $content) {
+    public function createInsertionCell($row, $col, $content)
+    {
         $xml = new SimpleXMLElement('<entry></entry>');
 
         $xml->content = $content;
