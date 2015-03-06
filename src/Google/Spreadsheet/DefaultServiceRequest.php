@@ -60,14 +60,6 @@ class DefaultServiceRequest implements ServiceRequestInterface
      */
     protected $userAgent = 'PHP Google Spreadsheet Api';
 
-    /**
-     * Max retries of redirected request
-     *
-     * @var int
-     */
-    protected $retryRedirectsLimit = 3;
-
-
 
     /**
      * Initializes the service request object.
@@ -123,28 +115,6 @@ class DefaultServiceRequest implements ServiceRequestInterface
     public function setUserAgent($userAgent)
     {
         $this->userAgent = $userAgent;
-        return $this;
-    }
-
-    /**
-     * get retryRedirectsLimit
-     *
-     * @return int
-     */
-    public function getRetryRedirectsLimit() {
-        return $this->retryRedirectsLimit;
-    }
-
-    /**
-     * Sometimes Google returns a mysterious 302.
-     * If so, the request will be retried. Use this method to define the maximum number of retries.
-     *
-     * @param int $retryRedirectsLimit
-     *
-     * @return Google\Spreadsheet\DefaultServiceRequest
-     */
-    public function setRetryRedirectsLimit($retryRedirectsLimit) {
-        $this->retryRedirectsLimit = $retryRedirectsLimit;
         return $this;
     }
 
